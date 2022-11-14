@@ -15,7 +15,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import { TransitionProps } from '@mui/material/transitions';
-
+import diff from 'arr-diff'
 
 interface  FullDialogProps{
     onRef:any
@@ -40,36 +40,47 @@ export default function FullScreenDialog(props: FullDialogProps) {
     const [fullOpen,setFullOpen] = React.useState(false)
     const [dataBefore,setDataBefore] = React.useState<any[]>([])
     const [dataNow,setDataNow] = React.useState<any[]>([])
-    const [tableKeys,setTableKeys] = React.useState<any[]>([])
+    const [tableBefKeys,setTableBefKeys] = React.useState<any[]>([])
+    const [tableNowKeys,setTableNowKeys] = React.useState<any[]>([])
     const handleClickOpen = (id:string) => {
         compareApi({id}).then((res:any)=>{
             let dataBefore = res.dataBefore.rows
             let dataNow = res.dataNow.rows
-            const tableKeys = Object.keys(res?.dataBefore?.rows[0])
-            let obj:any = {}
-            let objArr:any[] = []
-            tableKeys.forEach((el:string)=>{
-                obj[el] =' '
+            let tableBefKeys = Object.keys(res?.dataBefore?.rows[0])
+            let tableNowKeys = Object.keys(res?.dataNow?.rows[0])
+            let befAddkeys = diff(tableNowKeys,tableBefKeys)
+            let nowAddkeys = diff(tableBefKeys,tableNowKeys)
+            tableBefKeys = tableBefKeys.concat(befAddkeys)
+            tableNowKeys = tableNowKeys.concat(nowAddkeys)
+            let objBef:any = {}
+            let objBefArr:any[] = []
+            let objNow:any = {}
+            let objNowArr:any[] = []
+            tableBefKeys.forEach((el:string)=>{
+              objBef[el] =' '
             })
-
+            tableNowKeys.forEach((el:string)=>{
+              objNow[el] =' '
+            })
             for(var i = 0;i<Math.abs(dataBefore.length-dataNow.length);i++){
-                objArr.push(obj)
+              objBefArr.push(objBef)
+              objNowArr.push(objNow)
             }
             if(dataBefore.length>dataNow.length){
-                dataNow = dataNow.concat(objArr)
+                dataNow = dataNow.concat(objNowArr)
             }else if(dataBefore.length<dataNow.length){
-                dataBefore = dataBefore.concat(objArr)
+                dataBefore = dataBefore.concat(objBefArr)
             }
             setDataBefore(dataBefore)
             setDataNow(dataNow)
-            setTableKeys(tableKeys)
-          
+            setTableBefKeys(tableBefKeys)
+            setTableNowKeys(tableNowKeys)
             
            setTimeout(() => {
             var t1:any = document.getElementById('table1');
             var t2:any = document.getElementById('table2');
             var tRows = t1.rows.length;
-           var tCells = t1.rows[1].cells.length;
+            var tCells = t1.rows[1].cells.length;
            for(var i=1; i<tRows; i++){
                for(var p=0; p<tCells; p++){
                    if(t1.rows[i].cells[p].innerHTML !== t2.rows[i].cells[p].innerHTML){
@@ -130,13 +141,13 @@ export default function FullScreenDialog(props: FullDialogProps) {
             <div style={{borderRight:'5px solid #555',width:'50%',display:'flex',flexDirection:"column"}} key='dataBefore'>
                 <h1 style={{textAlign:'center'}}>上一版本</h1>
                 <div style={{overflowX:'auto'}}>
-                  <MyTable rows={dataBefore} tableKeys={tableKeys} id='table1' rowKey='table1' ></MyTable>
+                  <MyTable rows={dataBefore} tableKeys={tableBefKeys} id='table1' rowKey='table1' ></MyTable>
                 </div>
             </div>
             <div style={{borderLeft:'5px solid #555',width:'50%',display:'flex',flexDirection:"column"}} key='dataNow'>
                 <h1 style={{textAlign:'center'}}>最新版本</h1>
                 <div style={{overflowX:'auto'}}>
-                    <MyTable rows={dataNow} tableKeys={tableKeys} id='table2' rowKey='table2'></MyTable>
+                    <MyTable rows={dataNow} tableKeys={tableNowKeys} id='table2' rowKey='table2'></MyTable>
                 </div>
             </div>
            
